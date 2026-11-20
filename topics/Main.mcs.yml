@@ -289,9 +289,85 @@ beginDialog:
       id: sendActivity_8E9iv4
       activity: "{\"ITEMS: \" & Text(CountRows(Topic.GetItems.value))}"
 
+    - kind: SetVariable
+      id: set_articles_text
+      variable: Topic.ArticlesText
+      value: |-
+        =Concat(
+          Topic.GetItems.value,
+          Text(ID) & " | " & Sector & " | " & Text(Published, "yyyy-mm-dd") & " | "
+          & First(Split(Substitute(Last(Split(Link, "://")).Value, "www.", ""), "/")).Value & " | "
+          & Substitute(Title, "|", "-") & " | "
+          & Substitute(Left(Snippet, 300), "|", "-"),
+          Char(10)
+        )
+
     - kind: SendActivity
-      id: sendActivity_rOMuGo
-      activity: "{Left(Concat(Topic.GetItems.value, Title & \" | \" & Sector & \" | \" & Link, Char(10)), 1500)}"
+      id: dbg_articles
+      activity: "ARTICLES chars={Len(Topic.ArticlesText)} HEAD: {Left(Topic.ArticlesText, 800)}"
+
+    - kind: InvokeAIBuilderModelAction
+      id: invokeAIBuilderModelAction_fES4Xn
+      input:
+        binding:
+          articles: =Topic.ArticlesText
+
+      output:
+        binding:
+          predictionOutput: Topic.Selection
+
+      aIModelId: 705e91c6-a1d6-4376-bab0-f2e9e8b0ac29
+
+    - kind: SendActivity
+      id: sendActivity_NF05Bx
+      activity: "{\"SELECTION:\" & Char(10) & Topic.Selection.text}"
+
+    - kind: SetVariable
+      id: set_events_text
+      variable: Topic.EventsText
+      value: |-
+        =Concat(
+          ForAll(
+            Filter(Split(Topic.Selection.text, Char(10)), CountRows(Split(Value, "|")) >= 4),
+            {
+              s: Trim(First(Split(Value, "|")).Value),
+              p: Value(Trim(Last(FirstN(Split(Value, "|"), 2)).Value)),
+              o: Trim(Last(FirstN(Split(Value, "|"), 3)).Value)
+            }
+          ) As ev,
+          With(
+            {r: LookUp(Topic.GetItems.value, ID = ev.p)},
+            "EVENT | " & ev.s & " | " & ev.p & Char(10)
+            & "PRIMARY | " & First(Split(Substitute(Last(Split(r.Link, "://")).Value, "www.", ""), "/")).Value
+            & " | " & Substitute(r.Title, "|", "-") & " | " & Substitute(r.Snippet, "|", "-") & Char(10)
+          )
+          & If(
+              ev.o = "-" Or IsBlank(ev.o),
+              "",
+              Concat(
+                Split(ev.o, ",") As x,
+                With(
+                  {q: LookUp(Topic.GetItems.value, ID = Value(Trim(x.Value)))},
+                  "RELATED | " & First(Split(Substitute(Last(Split(q.Link, "://")).Value, "www.", ""), "/")).Value
+                  & " | " & Substitute(q.Title, "|", "-") & " | " & Substitute(q.Snippet, "|", "-") & Char(10)
+                )
+              )
+            ),
+          Char(10)
+        )
+
+    - kind: SendActivity
+      id: dbg_events
+      activity: "EVENTS chars={Len(Topic.EventsText)} events={CountRows(Split(Topic.EventsText, \"EVENT |\")) - 1} related={CountRows(Split(Topic.EventsText, \"RELATED |\")) - 1} TAIL: {Right(Topic.EventsText, 2500)}"
+
+    - kind: InvokeAIBuilderModelAction
+      id: invokeAIBuilderModelAction_j9pT6a
+      input:
+        binding:
+          events: =Topic.EventsText
+
+      output: {}
+      aIModelId: 3a798b1b-6c43-4894-b22f-2b0bf9ff8476
 
 inputType: {}
 outputType: {}
