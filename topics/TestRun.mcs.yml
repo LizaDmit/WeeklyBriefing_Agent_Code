@@ -6,7 +6,7 @@ beginDialog:
   id: main
   intent:
     triggerQueries:
-      - run feeds
+      - run test
 
   actions:
     - kind: SendActivity
