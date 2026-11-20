@@ -1,0 +1,14 @@
+mcs.metadata:
+  componentName: WeeklyBriefing_Agent
+kind: GptComponentMetadata
+displayName: WeeklyBriefing_Agent
+instructions:
+responseInstructions:
+gptCapabilities:
+  webBrowsing: false
+  codeInterpreter: false
+
+aISettings:
+  model: {}
+  extensionData:
+    lastUsedCustomModel: {}

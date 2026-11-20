@@ -1,0 +1,33 @@
+﻿displayName: WeeklyBriefing_Agent
+schemaName: cr921_TestTest
+accessControlPolicy: GroupMembership
+authenticationMode: Integrated
+authenticationTrigger: Always
+configuration:
+  channels:
+    - channelId: MsTeams
+
+    - channelId: Microsoft365Copilot
+
+  settings:
+    GenerativeActionsEnabled: false
+
+  isAgentConnectable: false
+  publishOnCreate: false
+  publishOnImport: true
+  gPTSettings:
+    defaultSchemaName: cr921_TestTest.gpt.default
+
+  isLightweightBot: false
+  aISettings:
+    useModelKnowledge: true
+    isFileAnalysisEnabled: false
+    isSemanticSearchEnabled: true
+    contentModeration: Low
+    optInUseLatestModels: false
+
+  deferredProvisioning: false
+
+publishedOn: 2026-11-05T02:19:53.0000000Z
+template: default-2.1.0
+language: 1033
