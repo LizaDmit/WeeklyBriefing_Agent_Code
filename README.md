@@ -2,7 +2,7 @@
 
 Automated weekly business and geopolitical news briefing for the Paradigm Consulting Asia team, built with Google Alerts, Power Automate, SharePoint and Microsoft Copilot Studio.
 
-**Status (20 Nov 2026):** news collection is working. Story selection, summaries and email generation are not built yet.
+**Status (20 Nov 2026):** news collection is working (hourly flow into SharePoint). The agent reads the last 7 days from the list, selects stories (`Briefing_Select`) and builds event text for summaries. The summary prompt (`Briefing_Summarise`) is written and tested in the prompt editor but not yet connected. HTML email generation is not built yet.
 
 ## Goal
 
@@ -27,8 +27,9 @@ Power Automate: "Briefing - Collect alerts"   (every hour)
 SharePoint list: "Briefing Articles"   (unique Link column = deduplication)
         │
         ▼
-Copilot Studio agent   (run manually on Monday)        ← not built yet
-        │  filter to the week → AI selects ~15 stories → AI summaries
+Copilot Studio agent "WeeklyBriefing_Agent"   (run manually on Monday)
+        │  Get items (last 7 days) → Briefing_Select (choose ~15, group, sector)
+        │  → build event text → Briefing_Summarise (outlet, headline, summary)  ← not connected yet
         ▼
 HTML email via Outlook (Office 365 Outlook connector)
 ```
@@ -86,7 +87,19 @@ Uses only standard connectors (RSS, SharePoint). No premium licence or Copilot C
 
 Currently stored on the intern's personal OneDrive (temporary). **To do:** move it to a team SharePoint site.
 
-### 4. Copilot Studio (`copilot_studio/`)
+### 4. Copilot Studio (`copilot_studio/`, `prompts/`)
+
+**WeeklyBriefing_Agent, topic `Weekly briefing` (trigger `run briefing`):**
+
+1. **Get items** (SharePoint) from `Briefing Articles`: Filter Query set as a formula in the code editor (`$filter: ="Published ge '" & Text(DateAdd(Now(), -7, TimeUnit.Days), "yyyy-mm-dd") & "T00:00:00Z'"`), Order By `Published desc`, Top Count `5000`. A filter typed as plain text is sent literally and fails with HTTP 400.
+2. **ArticlesText**: one line per article: `ID | search sector | date | domain | headline | snippet (300 chars)`.
+3. **Briefing_Select** prompt (`prompts/briefing_select.txt`): returns `SECTOR | PRIMARY_ID | OTHER_IDS | SHORT_LABEL`. The AI returns only SharePoint IDs; headlines and links are looked up afterwards, so links cannot be invented.
+4. **EventsText**: for each selected event, the PRIMARY article and all RELATED (grouped) articles with their snippets, built with `LookUp` on the IDs.
+5. **Briefing_Summarise** prompt (`prompts/briefing_summarise.txt`): returns `PRIMARY_ID | OUTLET | HEADLINE | SUMMARY`; the summary is two sentences, one sentence, or `-` depending on the facts available.
+
+Tested on 70 articles (20 Nov): 10 events selected, noise removed, PDD coverage from 5 outlets grouped into one event.
+
+**Prototype (reference only), agent `TestTest`:**
 
 - Agent: `TestTest` (scratch agent, Paradigm Consulting environment)
 - `fetch_all_feeds_v3.yaml`: prototype topic (trigger `run feeds`) that fetches all 30 feeds directly, parses the Atom entries into `link | headline | domain | date (HKT) | snippet` lines, and removes exact duplicates. It is kept for reference; the final agent will read from the SharePoint list instead.
@@ -107,12 +120,13 @@ Lessons learned:
 
 ## Next steps
 
-1. Let the flow collect for several days; measure weekly volume per sector.
-2. Copilot Studio agent: read the list for the Monday–Sunday window (HKT).
-3. AI prompt 1: relevance filtering, grouping by event, ranking, choosing ~15 stories, assigning final sectors.
-4. AI prompt 2: grounded summaries (about 2 sentences; headline only if the snippet is too thin).
-5. Build the HTML email and test it in Outlook; send the first sample to Mark.
-6. Write a short operating guide.
+1. Check weekly volume (row count) and the flow's run history; decide whether a pre-filter is needed before Briefing_Select (about 285 characters per article).
+2. Connect Briefing_Summarise in the topic and validate it on the real events.
+3. Parse the summary output and look up link and date for each PRIMARY_ID.
+4. Build the HTML email (sector headings, headline, outlet, date, summary, "Read article" link) and test it in Outlook.
+5. Change the date filter to the exact Monday–Sunday window (HKT).
+6. Send the first agent-generated sample to Mark.
+7. Write a short operating guide.
 
 ## Security
 
