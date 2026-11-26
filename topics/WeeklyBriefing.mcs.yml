@@ -1,0 +1,395 @@
+kind: AdaptiveDialog
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent:
+    triggerQueries:
+      - run briefing
+
+  actions:
+    - kind: InvokeConnectorAction
+      id: invokeConnectorAction_biSz6t
+      input:
+        binding:
+          $filter: ="Published ge '" & Text(DateAdd(Now(), -7, TimeUnit.Days), "yyyy-mm-dd") & "T00:00:00Z'"
+          $orderby: Published desc
+          $top: 5000
+          dataset: https://paradigmconsultinghk-my.sharepoint.com/personal/intern_paradigmconsulting_com_hk
+          table: f893c9e5-9802-48d1-98bc-e1f672db3186
+
+      output:
+        kind: SingleVariableOutputBinding
+        variable: Topic.GetItems
+
+      connectionReference: cr921_TestTest.shared_sharepointonline.shared-sharepointonl-b39c5ddd-182a-4999-a04b-0b45087e8908
+      connectionProperties:
+        name: cr921_TestTest.shared_sharepointonline.shared-sharepointonl-b39c5ddd-182a-4999-a04b-0b45087e8908
+        mode: Invoker
+
+      dynamicOutputSchema:
+        kind: Record
+        properties:
+          value:
+            description: List of Items
+            order: 0
+            type:
+              kind: Table
+              properties:
+                "{ContentType}":
+                  displayName: 內容類型
+                  description: 項目內容類型的名稱。
+                  order: 22
+                  type:
+                    kind: Record
+                    properties:
+                      Id:
+                        displayName: Id
+                        order: 0
+                        dynamicValuesConfig:
+                          capability: List
+
+                        type: String
+
+                      Name:
+                        displayName: Name
+                        order: 1
+                        type: String
+
+                "{FilenameWithExtension}":
+                  displayName: 含副檔名的檔案名稱
+                  description: 針對程式庫，會傳回包括副檔名的檔案名稱。針對清單，會傳回標題內容。
+                  order: 17
+                  type: String
+
+                "{FullPath}":
+                  displayName: 完整路徑
+                  description: 項目或資料夾或檔案的完整路徑
+                  order: 19
+                  type: String
+
+                "{HasAttachments}":
+                  displayName: 有附件
+                  description: 指出項目中是否有附件。
+                  order: 23
+                  type: Boolean
+
+                "{Identifier}":
+                  displayName: 識別碼
+                  description: 可以在選取檔案時用於檔案相關動作的值。
+                  order: 13
+                  type: String
+
+                "{IsFolder}":
+                  displayName: 是資料夾
+                  description: 當項目是資料夾時為 True，不是資料夾時則為 False。
+                  order: 14
+                  type: Boolean
+
+                "{Link}":
+                  displayName: 項目連結
+                  description: 可以用來取得檔案或清單項目的連結。只有具有項目權限的人員才可以開啟連結。
+                  order: 15
+                  type: String
+
+                "{ModerationComment}":
+                  displayName: 與此清單項目內容核准相關聯的註解
+                  description: 與清單項目仲裁相關聯的註解。
+                  order: 21
+                  type: String
+
+                "{ModerationStatus}":
+                  displayName: 內容核准狀態
+                  description: "內容核准狀態。它可以是下列其中一種: 草稿、擱置、已核准或已拒絕"
+                  order: 20
+                  type: String
+
+                "{Name}":
+                  displayName: 名稱
+                  description: 文件庫中的項目檔案名稱，清單中的項目顯示名稱。
+                  order: 16
+                  type: String
+
+                "{Path}":
+                  displayName: 資料夾路徑
+                  description: 相對於站台位址的項目所在資料夾路徑。
+                  order: 18
+                  type: String
+
+                "{TriggerWindowEndToken}":
+                  displayName: 觸發程式視窗結束權杖
+                  description: 表示目前流程檢查時間的標記。如果您想要在自上次流程檢查之後檢查一或多欄，請使用此選項。
+                  order: 26
+                  type: String
+
+                "{TriggerWindowStartToken}":
+                  displayName: 觸發程式視窗起始權杖
+                  description: 表示上一次流程檢查時間的標記。如果您想要在自上次流程檢查之後檢查一或多欄，請使用此選項。
+                  order: 25
+                  type: String
+
+                "{VersionNumber}":
+                  displayName: 版本號碼
+                  description: 檔案版本號碼或清單項目。
+                  order: 24
+                  type: String
+
+                Author:
+                  displayName: 建立者
+                  description: 建立此項目的使用者。
+                  order: 11
+                  type:
+                    kind: Record
+                    properties:
+                      Claims:
+                        displayName: Claims
+                        description: 建立此項目之使用者的內部識別碼。
+                        order: 0
+                        dynamicValuesConfig:
+                          capability: List
+
+                        type: String
+
+                      Department:
+                        displayName: Department
+                        description: 建立此項目之使用者的部門名稱。
+                        order: 4
+                        type: String
+
+                      DisplayName:
+                        displayName: DisplayName
+                        description: 建立此項目之使用者的名稱。
+                        order: 1
+                        type: String
+
+                      Email:
+                        displayName: Email
+                        description: 建立此項目之使用者的電子郵件地址。
+                        order: 2
+                        type: String
+
+                      JobTitle:
+                        displayName: JobTitle
+                        description: 建立此項目之使用者的職稱。
+                        order: 5
+                        type: String
+
+                      Picture:
+                        displayName: Picture
+                        description: 連結至建立此項目之使用者的圖片。
+                        order: 3
+                        type: String
+
+                ComplianceAssetId:
+                  displayName: 合規性資產識別碼
+                  order: 8
+                  type: String
+
+                Created:
+                  displayName: 建立時間
+                  description: 建立此項目的時間。
+                  order: 10
+                  type: DateTime
+
+                Editor:
+                  displayName: 修改者
+                  description: 上次變更此項目的使用者。
+                  order: 12
+                  type:
+                    kind: Record
+                    properties:
+                      Claims:
+                        displayName: Claims
+                        description: 上次變更此項目之使用者的內部識別碼。
+                        order: 0
+                        dynamicValuesConfig:
+                          capability: List
+
+                        type: String
+
+                      Department:
+                        displayName: Department
+                        description: 上次變更此項目之使用者的部門名稱。
+                        order: 4
+                        type: String
+
+                      DisplayName:
+                        displayName: DisplayName
+                        description: 上次變更此項目之使用者的名稱。
+                        order: 1
+                        type: String
+
+                      Email:
+                        displayName: Email
+                        description: 上次變更此項目之使用者的電子郵件地址。
+                        order: 2
+                        type: String
+
+                      JobTitle:
+                        displayName: JobTitle
+                        description: 上次變更此項目之使用者的職稱。
+                        order: 5
+                        type: String
+
+                      Picture:
+                        displayName: Picture
+                        description: 連結到上次變更此項目之使用者的圖片。
+                        order: 3
+                        type: String
+
+                ID:
+                  displayName: 識別碼
+                  description: 清單項目識別碼。使用此值指定要在其他清單相關動作上執行的項目。
+                  order: 0
+                  type: Number
+
+                Link:
+                  displayName: Link
+                  order: 2
+                  type: String
+
+                Modified:
+                  displayName: 修改時間
+                  description: 上次變更此項目的時間。
+                  order: 9
+                  type: DateTime
+
+                OData__ColorTag:
+                  displayName: 色彩標記
+                  order: 7
+                  type: String
+
+                Published:
+                  displayName: Published
+                  order: 3
+                  type: DateTime
+
+                Search:
+                  displayName: Search
+                  order: 6
+                  type: String
+
+                Sector:
+                  displayName: Sector
+                  order: 5
+                  type: String
+
+                Snippet:
+                  displayName: Snippet
+                  order: 4
+                  type: String
+
+                Title:
+                  displayName: 標題
+                  order: 1
+                  type: String
+
+      operationId: GetItems
+
+    - kind: SendActivity
+      id: sendActivity_8E9iv4
+      activity: "{\"ITEMS: \" & Text(CountRows(Topic.GetItems.value))}"
+
+    - kind: SetVariable
+      id: set_articles_text
+      variable: Topic.ArticlesText
+      value: |-
+        =Concat(
+          Topic.GetItems.value,
+          Text(ID) & " | " & Sector & " | " & Text(Published, "yyyy-mm-dd") & " | "
+          & First(Split(Substitute(Last(Split(Link, "://")).Value, "www.", ""), "/")).Value & " | "
+          & Substitute(Title, "|", "-") & " | "
+          & Substitute(Left(Snippet, 300), "|", "-"),
+          Char(10)
+        )
+
+    - kind: SendActivity
+      id: dbg_articles
+      activity: "ARTICLES chars={Len(Topic.ArticlesText)} HEAD: {Left(Topic.ArticlesText, 800)}"
+
+    - kind: InvokeAIBuilderModelAction
+      id: invokeAIBuilderModelAction_fES4Xn
+      input:
+        binding:
+          articles: =Topic.ArticlesText
+
+      output:
+        binding:
+          predictionOutput: Topic.Selection
+
+      aIModelId: 705e91c6-a1d6-4376-bab0-f2e9e8b0ac29
+
+    - kind: SendActivity
+      id: sendActivity_NF05Bx
+      activity: "{\"SELECTION:\" & Char(10) & Topic.Selection.text}"
+
+    - kind: SetVariable
+      id: set_needed_ids
+      variable: Topic.NeededIds
+      value: |-
+        ="," & Substitute(
+          Concat(
+            Filter(Split(Topic.Selection.text, Char(10)), CountRows(Split(Value, "|")) >= 4),
+            Last(FirstN(Split(Value, "|"), 2)).Value & "," & Last(FirstN(Split(Value, "|"), 3)).Value,
+            ","
+          ),
+          " ", ""
+        ) & ","
+
+    - kind: SetVariable
+      id: set_needed_items
+      variable: Topic.NeededItems
+      value: =Filter(Topic.GetItems.value, ("," & Text(ID) & ",") in Topic.NeededIds)
+
+    - kind: SendActivity
+      id: dbg_needed
+      activity: NEEDED rows={CountRows(Topic.NeededItems)} ids={Topic.NeededIds}
+
+    - kind: SetVariable
+      id: set_events_text
+      variable: Topic.EventsText
+      value: |-
+        =Concat(
+          ForAll(
+            Filter(Split(Topic.Selection.text, Char(10)), CountRows(Split(Value, "|")) >= 4),
+            {
+              s: Trim(First(Split(Value, "|")).Value),
+              p: Value(Trim(Last(FirstN(Split(Value, "|"), 2)).Value)),
+              o: Trim(Last(FirstN(Split(Value, "|"), 3)).Value)
+            }
+          ) As ev,
+          With(
+            {r: LookUp(Topic.NeededItems, ID = ev.p)},
+            "EVENT | " & ev.s & " | " & ev.p & Char(10)
+            & "PRIMARY | " & First(Split(Substitute(Last(Split(r.Link, "://")).Value, "www.", ""), "/")).Value
+            & " | " & Substitute(r.Title, "|", "-") & " | " & Substitute(r.Snippet, "|", "-") & Char(10)
+          )
+          & If(
+              ev.o = "-" Or IsBlank(ev.o),
+              "",
+              Concat(
+                Split(ev.o, ",") As x,
+                With(
+                  {q: LookUp(Topic.NeededItems, ID = Value(Trim(x.Value)))},
+                  "RELATED | " & First(Split(Substitute(Last(Split(q.Link, "://")).Value, "www.", ""), "/")).Value
+                  & " | " & Substitute(q.Title, "|", "-") & " | " & Substitute(q.Snippet, "|", "-") & Char(10)
+                )
+              )
+            ),
+          Char(10)
+        )
+
+    - kind: SendActivity
+      id: dbg_events
+      activity: "EVENTS chars={Len(Topic.EventsText)} events={CountRows(Split(Topic.EventsText, \"EVENT |\")) - 1} related={CountRows(Split(Topic.EventsText, \"RELATED |\")) - 1} TAIL: {Right(Topic.EventsText, 2500)}"
+
+    - kind: InvokeAIBuilderModelAction
+      id: invokeAIBuilderModelAction_j9pT6a
+      input:
+        binding:
+          events: =Topic.EventsText
+
+      output: {}
+      aIModelId: 3a798b1b-6c43-4894-b22f-2b0bf9ff8476
+
+inputType: {}
+outputType: {}
