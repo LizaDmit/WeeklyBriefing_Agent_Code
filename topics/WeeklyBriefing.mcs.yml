@@ -1,4 +1,5 @@
 kind: AdaptiveDialog
+modelDescription: "Runs the weekly sector briefing: reads last week's news articles from SharePoint, selects and summarises the most significant stories, and emails the briefing. Use this when the message is \"run briefing\"."
 beginDialog:
   kind: OnRecognizedIntent
   id: main
@@ -43,7 +44,7 @@ beginDialog:
       connectionReference: cr921_TestTest.shared_sharepointonline.shared-sharepointonl-b39c5ddd-182a-4999-a04b-0b45087e8908
       connectionProperties:
         name: cr921_TestTest.shared_sharepointonline.shared-sharepointonl-b39c5ddd-182a-4999-a04b-0b45087e8908
-        mode: Invoker
+        mode: Maker
 
       dynamicOutputSchema:
         kind: Record
@@ -448,7 +449,9 @@ beginDialog:
                     "kedglobal.com", "KED Global",
                     "mkbn.mk.co.kr", "Pulse by Maeil Business News",
                     "technode.global", "TechNode Global",
-                    "colliers.com", "Colliers", "intelligentinsurer.com", "Intelligent Insurer", "moneycontrol.com", "Moneycontrol",
+                    "colliers.com", "Colliers",
+                    "intelligentinsurer.com", "Intelligent Insurer",
+                    "moneycontrol.com", "Moneycontrol",
                     "news.bloombergtax.com", "Bloomberg Tax",
                     If(
                       "." in mo And " - " in r.Title,
@@ -535,24 +538,53 @@ beginDialog:
       id: dbg_html
       activity: HTML chars={Len(Topic.EmailHtml)} stories in email={CountRows(Filter(Topic.Stories, sector in ["Banking (Traditional & Digital)", "Private Equity", "Property (Real Estate)", "Technology", "Digital Assets & Tokenization", "E-Commerce", "Insurance", "Professional Services", "Luxury Retail", "Geopolitical Developments (China / US)"]))} of {CountRows(Topic.Stories)}
 
-    - kind: InvokeConnectorAction
-      id: invokeConnectorAction_4MdTJ7
-      input:
-        binding:
-          Body: =Topic.EmailHtml
-          Subject: ="WEEKLY SECTOR BRIEFING | " & Topic.RangeText
-          To: intern@paradigmconsulting.com.hk
+    - kind: ConditionGroup
+      id: check_enough_stories
+      conditions:
+        - id: cond_enough_stories
+          condition: =CountRows(Topic.Stories) >= 5
+          actions:
+            - kind: InvokeConnectorAction
+              id: invokeConnectorAction_4MdTJ7
+              input:
+                binding:
+                  Body: =Topic.EmailHtml
+                  Subject: ="WEEKLY SECTOR BRIEFING | " & Topic.RangeText
+                  To: intern@paradigmconsulting.com.hk
 
-      output:
-        kind: SingleVariableOutputBinding
-        variable: Topic.SendEmailV2
+              output:
+                kind: SingleVariableOutputBinding
+                variable: Topic.SendEmailV2
 
-      connectionReference: cr921_TestTest.shared_office365.shared-office365-f1caab0b-3631-408a-8a6f-9ed67e0b13d1
-      connectionProperties:
-        name: cr921_TestTest.shared_office365.shared-office365-f1caab0b-3631-408a-8a6f-9ed67e0b13d1
-        mode: Invoker
+              connectionReference: cr921_TestTest.shared_office365.shared-office365-f1caab0b-3631-408a-8a6f-9ed67e0b13d1
+              connectionProperties:
+                name: cr921_TestTest.shared_office365.shared-office365-f1caab0b-3631-408a-8a6f-9ed67e0b13d1
+                mode: Maker
 
-      operationId: SendEmailV2
+              operationId: SendEmailV2
+
+      elseActions:
+        - kind: InvokeConnectorAction
+          id: send_alert_email
+          input:
+            binding:
+              Body: "=\"<p>The weekly sector briefing for \" & Topic.RangeText & \" was <b>not sent</b>: only \" & Text(CountRows(Topic.Stories)) & \" stories were produced.</p><p>To retry, open WeeklyBriefing_Agent in Copilot Studio and type <b>run briefing</b> in the Test pane.</p>\""
+              Subject: "=\"ACTION NEEDED: Weekly sector briefing not sent (\" & Topic.RangeText & \")\""
+              To: intern@paradigmconsulting.com.hk
+
+          output:
+            kind: SingleVariableOutputBinding
+            variable: Topic.SendAlertEmail
+
+          connectionReference: cr921_TestTest.shared_office365.shared-office365-f1caab0b-3631-408a-8a6f-9ed67e0b13d1
+          connectionProperties:
+            name: cr921_TestTest.shared_office365.shared-office365-f1caab0b-3631-408a-8a6f-9ed67e0b13d1
+            mode: Maker
+
+          operationId: SendEmailV2
+
+    - kind: EndConversation
+      id: end_conversation
 
 inputType: {}
 outputType: {}
