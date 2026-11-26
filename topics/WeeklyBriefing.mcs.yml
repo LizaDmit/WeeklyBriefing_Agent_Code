@@ -380,7 +380,7 @@ beginDialog:
 
     - kind: SendActivity
       id: dbg_events
-      activity: "EVENTS chars={Len(Topic.EventsText)} events={CountRows(Split(Topic.EventsText, \"EVENT |\")) - 1} related={CountRows(Split(Topic.EventsText, \"RELATED |\")) - 1} TAIL: {Right(Topic.EventsText, 2500)}"
+      activity: "EVENTS chars={Len(Topic.EventsText)} events={CountRows(Split(Topic.EventsText, \"EVENT |\")) - 1} related={CountRows(Split(Topic.EventsText, \"RELATED |\")) - 1} FULL: {Substitute(Topic.EventsText, Char(10), Char(10) & Char(10))}"
 
     - kind: InvokeAIBuilderModelAction
       id: invokeAIBuilderModelAction_j9pT6a
@@ -388,8 +388,15 @@ beginDialog:
         binding:
           events: =Topic.EventsText
 
-      output: {}
+      output:
+        binding:
+          predictionOutput: Topic.Summaries
+
       aIModelId: 3a798b1b-6c43-4894-b22f-2b0bf9ff8476
+
+    - kind: SendActivity
+      id: dbg_summaries
+      activity: "{\"SUMMARIES:\" & Char(10) & Char(10) & Substitute(Topic.Summaries.text, Char(10), Char(10) & Char(10))}"
 
 inputType: {}
 outputType: {}
