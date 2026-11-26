@@ -7,11 +7,30 @@ beginDialog:
       - run briefing
 
   actions:
+    - kind: SetVariable
+      id: set_week_start
+      variable: Topic.WeekStart
+      value: =DateAdd(Today(), -(Weekday(Today(), StartOfWeek.Monday) - 1) - 7, TimeUnit.Days)
+
+    - kind: SetVariable
+      id: set_window_start
+      variable: Topic.WindowStartUtc
+      value: =Text(DateAdd(Topic.WeekStart, -1, TimeUnit.Days), "yyyy-mm-dd") & "T16:00:00Z"
+
+    - kind: SetVariable
+      id: set_window_end
+      variable: Topic.WindowEndUtc
+      value: =Text(DateAdd(Topic.WeekStart, 6, TimeUnit.Days), "yyyy-mm-dd") & "T16:00:00Z"
+
+    - kind: SendActivity
+      id: dbg_window
+      activity: "WINDOW (HKT): {Text(Topic.WeekStart, \"ddd d mmm\")} 00:00 to {Text(DateAdd(Topic.WeekStart, 6, TimeUnit.Days), \"ddd d mmm\")} 23:59 | UTC filter: {Topic.WindowStartUtc} to {Topic.WindowEndUtc}"
+
     - kind: InvokeConnectorAction
       id: invokeConnectorAction_biSz6t
       input:
         binding:
-          $filter: ="Published ge '" & Text(DateAdd(Now(), -7, TimeUnit.Days), "yyyy-mm-dd") & "T00:00:00Z'"
+          $filter: ="Published ge '" & Topic.WindowStartUtc & "' and Published lt '" & Topic.WindowEndUtc & "'"
           $orderby: Published desc
           $top: 5000
           dataset: https://paradigmconsultinghk-my.sharepoint.com/personal/intern_paradigmconsulting_com_hk
@@ -429,7 +448,8 @@ beginDialog:
                     "kedglobal.com", "KED Global",
                     "mkbn.mk.co.kr", "Pulse by Maeil Business News",
                     "technode.global", "TechNode Global",
-                    "colliers.com", "Colliers",
+                    "colliers.com", "Colliers", "intelligentinsurer.com", "Intelligent Insurer", "moneycontrol.com", "Moneycontrol",
+                    "news.bloombergtax.com", "Bloomberg Tax",
                     If(
                       "." in mo And " - " in r.Title,
                       With(
@@ -456,7 +476,7 @@ beginDialog:
     - kind: SetVariable
       id: set_range_text
       variable: Topic.RangeText
-      value: =Text(DateAdd(Today(), -7, TimeUnit.Days), "d mmm") & " – " & Text(Today(), "d mmm yyyy")
+      value: =Text(Topic.WeekStart, "d mmm") & " – " & Text(DateAdd(Topic.WeekStart, 6, TimeUnit.Days), "d mmm yyyy")
 
     - kind: SetVariable
       id: set_email_html
