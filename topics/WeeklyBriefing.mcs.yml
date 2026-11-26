@@ -398,5 +398,35 @@ beginDialog:
       id: dbg_summaries
       activity: "{\"SUMMARIES:\" & Char(10) & Char(10) & Substitute(Topic.Summaries.text, Char(10), Char(10) & Char(10))}"
 
+    - kind: SetVariable
+      id: set_stories
+      variable: Topic.Stories
+      value: |-
+        =ForAll(
+          Filter(Split(Topic.Summaries.text, Char(10)), CountRows(Split(Value, "|")) >= 4) As ln,
+          With(
+            {pid: Value(Trim(First(Split(ln.Value, "|")).Value))},
+            With(
+              {
+                r: LookUp(Topic.NeededItems, ID = pid),
+                sel: LookUp(Split(Topic.Selection.text, Char(10)), Trim(Last(FirstN(Split(Value, "|"), 2)).Value) = Text(pid))
+              },
+              {
+                id: pid,
+                sector: Trim(First(Split(sel.Value, "|")).Value),
+                outlet: Trim(Last(FirstN(Split(ln.Value, "|"), 2)).Value),
+                headline: Trim(Last(FirstN(Split(ln.Value, "|"), 3)).Value),
+                summary: Trim(Last(FirstN(Split(ln.Value, "|"), 4)).Value),
+                link: r.Link,
+                published: r.Published
+              }
+            )
+          )
+        )
+
+    - kind: SendActivity
+      id: dbg_stories
+      activity: "{\"STORIES: \" & Text(CountRows(Topic.Stories)) & Char(10) & Char(10) & Concat(Topic.Stories, sector & \" | \" & Text(id) & \" | \" & Text(published, \"yyyy-mm-dd hh:mm\") & \" | \" & outlet & \" | \" & link, Char(10) & Char(10))}"
+
 inputType: {}
 outputType: {}
