@@ -428,5 +428,86 @@ beginDialog:
       id: dbg_stories
       activity: "{\"STORIES: \" & Text(CountRows(Topic.Stories)) & Char(10) & Char(10) & Concat(Topic.Stories, sector & \" | \" & Text(id) & \" | \" & Text(published, \"yyyy-mm-dd hh:mm\") & \" | \" & outlet & \" | \" & link, Char(10) & Char(10))}"
 
+    - kind: SetVariable
+      id: set_range_text
+      variable: Topic.RangeText
+      value: =Text(DateAdd(Today(), -7, TimeUnit.Days), "d mmm") & " – " & Text(Today(), "d mmm yyyy")
+
+    - kind: SetVariable
+      id: set_email_html
+      variable: Topic.EmailHtml
+      value: |-
+        =With(
+          {
+            secs: Filter(
+              ["Banking (Traditional & Digital)", "Private Equity", "Property (Real Estate)", "Technology", "Digital Assets & Tokenization", "E-Commerce", "Insurance", "Professional Services", "Luxury Retail", "Geopolitical Developments (China / US)"] As s,
+              CountRows(Filter(Topic.Stories, sector = s.Value)) > 0
+            )
+          },
+          With(
+            {
+              n: CountRows(Filter(Topic.Stories, sector in secs)),
+              m: CountRows(secs)
+            },
+            "<table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='background:#f4f4f4;'><tr><td align='center' style='padding:24px 12px;'>"
+            & "<table role='presentation' width='640' cellpadding='0' cellspacing='0' style='width:640px;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#222222;'>"
+            & "<tr><td style='padding:28px 32px 16px 32px;border-bottom:3px solid #1F3864;'>"
+            & "<div style='font-size:22px;font-weight:bold;letter-spacing:1px;color:#1F3864;'>WEEKLY SECTOR BRIEFING</div>"
+            & "<div style='font-size:14px;color:#555555;padding-top:6px;'>" & Topic.RangeText & "</div>"
+            & "<div style='font-size:13px;color:#555555;padding-top:4px;'>" & Text(n) & " stories | " & Text(m) & " sectors</div>"
+            & "</td></tr>"
+            & Concat(
+                Sequence(m) As k,
+                With(
+                  {sn: Last(FirstN(secs, k.Value)).Value},
+                  "<tr><td style='padding:24px 32px 4px 32px;'><div style='font-size:16px;font-weight:bold;color:#1F3864;border-bottom:1px solid #D0D7E5;padding-bottom:6px;'>"
+                  & Text(k.Value) & ". " & Substitute(sn, "&", "&amp;") & "</div></td></tr>"
+                  & Concat(
+                      Filter(Topic.Stories, sector = sn) As st,
+                      With(
+                        {
+                          h: Substitute(Substitute(Substitute(Substitute(st.headline, UniChar(8203), ""), "&", "&amp;"), "<", "&lt;"), ">", "&gt;"),
+                          o: Substitute(Substitute(st.outlet, "&", "&amp;"), "<", "&lt;"),
+                          sm: Substitute(Substitute(Substitute(Substitute(st.summary, UniChar(8203), ""), "&", "&amp;"), "<", "&lt;"), ">", "&gt;"),
+                          l: Substitute(Substitute(Substitute(st.link, UniChar(8203), ""), "&", "&amp;"), "'", "%27")
+                        },
+                        "<tr><td style='padding:12px 32px 4px 32px;'>"
+                        & "<div style='font-size:15px;font-weight:bold;color:#111111;line-height:21px;'>" & h & "</div>"
+                        & "<div style='font-size:12px;color:#777777;padding-top:3px;'>" & o & " | " & Text(st.published, "d mmm yyyy") & "</div>"
+                        & If(sm = "-" Or IsBlank(sm), "", "<div style='font-size:14px;color:#333333;line-height:20px;padding-top:6px;'>" & sm & "</div>")
+                        & If(IsBlank(l), "", "<div style='font-size:13px;padding-top:6px;'><a href='" & l & "' style='color:#0563C1;text-decoration:underline;'>Read article</a></div>")
+                        & "</td></tr>"
+                      )
+                    )
+                )
+              )
+            & "<tr><td style='padding:28px 32px;font-size:11px;line-height:16px;color:#999999;border-top:1px solid #e5e5e5;'>Compiled from public news sources for Paradigm Consulting Asia. Summaries are based on short article excerpts; please see the original articles for full details.</td></tr>"
+            & "</table></td></tr></table>"
+          )
+        )
+
+    - kind: SendActivity
+      id: dbg_html
+      activity: HTML chars={Len(Topic.EmailHtml)} stories in email={CountRows(Filter(Topic.Stories, sector in ["Banking (Traditional & Digital)", "Private Equity", "Property (Real Estate)", "Technology", "Digital Assets & Tokenization", "E-Commerce", "Insurance", "Professional Services", "Luxury Retail", "Geopolitical Developments (China / US)"]))} of {CountRows(Topic.Stories)}
+
+    - kind: InvokeConnectorAction
+      id: invokeConnectorAction_4MdTJ7
+      input:
+        binding:
+          Body: =Topic.EmailHtml
+          Subject: ="WEEKLY SECTOR BRIEFING | " & Topic.RangeText
+          To: intern@paradigmconsulting.com.hk
+
+      output:
+        kind: SingleVariableOutputBinding
+        variable: Topic.SendEmailV2
+
+      connectionReference: cr921_TestTest.shared_office365.shared-office365-f1caab0b-3631-408a-8a6f-9ed67e0b13d1
+      connectionProperties:
+        name: cr921_TestTest.shared_office365.shared-office365-f1caab0b-3631-408a-8a6f-9ed67e0b13d1
+        mode: Invoker
+
+      operationId: SendEmailV2
+
 inputType: {}
 outputType: {}
