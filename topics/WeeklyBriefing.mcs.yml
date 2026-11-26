@@ -414,7 +414,32 @@ beginDialog:
               {
                 id: pid,
                 sector: Trim(First(Split(sel.Value, "|")).Value),
-                outlet: Trim(Last(FirstN(Split(ln.Value, "|"), 2)).Value),
+                outlet: With(
+                  {
+                    mo: Trim(Last(FirstN(Split(ln.Value, "|"), 2)).Value),
+                    dm: Lower(First(Split(Substitute(Last(Split(r.Link, "://")).Value, "www.", ""), "/")).Value)
+                  },
+                  Switch(
+                    dm,
+                    "info.gov.hk", "Hong Kong Government",
+                    "ustr.gov", "Office of the US Trade Representative",
+                    "edb.gov.sg", "Singapore Economic Development Board",
+                    "foreignaffairs.house.gov", "House Foreign Affairs Committee",
+                    "asianbankingandfinance.net", "Asian Banking & Finance",
+                    "kedglobal.com", "KED Global",
+                    "mkbn.mk.co.kr", "Pulse by Maeil Business News",
+                    "technode.global", "TechNode Global",
+                    "colliers.com", "Colliers",
+                    If(
+                      "." in mo And " - " in r.Title,
+                      With(
+                        {sfx: Trim(Last(Split(r.Title, " - ")).Value)},
+                        If(Lower(Substitute(sfx, " ", "")) in Lower(mo), sfx, mo)
+                      ),
+                      mo
+                    )
+                  )
+                ),
                 headline: Trim(Last(FirstN(Split(ln.Value, "|"), 3)).Value),
                 summary: Trim(Last(FirstN(Split(ln.Value, "|"), 4)).Value),
                 link: r.Link,
